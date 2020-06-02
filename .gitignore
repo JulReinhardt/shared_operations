@@ -1,0 +1,5 @@
+
+shared_operation.egg-info
+dist
+correction/__pycache__
+.DS_Store
