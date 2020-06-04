@@ -10,6 +10,6 @@ setup(  name = 'shared operations',
         author = 'Juliane Reinhardt',
         author_email = 'jreinhardt@lbl.gov',
         url = 'https://github.com/JulReinhardt/shared_operations.git',
-        packages = ['correction'],
+        packages = ['shop', 'shop.correction'],
         python_requires='>=3'
         )

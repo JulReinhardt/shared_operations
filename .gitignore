@@ -4,3 +4,4 @@ dist
 correction/__pycache__
 .DS_Store
 shared_operations.egg-info
+shop/correction/__pycache__

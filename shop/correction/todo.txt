@@ -1,0 +1,9 @@
+[ ] implement other registration modes
+[ ] implement background correction/baseline
+
+# [] remove pre-edge
+# [] add pre-edge
+# [] despike
+# [] denoise
+# [] Wiener, median Sobel ... filters
+# [] fitting (linear, least squares)
