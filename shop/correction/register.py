@@ -8,13 +8,6 @@ from skimage.filters import sobel, gaussian
 from skimage.registration import phase_cross_correlation as register_translation# scikit-image > 0.17 required, otherwise from skimage.feature import register_translation
 
 
-
-
-#TODO:  [x] variables snake_case naming
-#       [x] add documentation
-#       [x] remove progress bar stuff 
-
-
 def register_frames_stack(frames, mode = 'translation', sobelFilter = True, autocrop = True):
     """
         Function to register a stack of frames using different registration modes. 
@@ -59,8 +52,10 @@ def register_frames_stack(frames, mode = 'translation', sobelFilter = True, auto
     # if autocrop: aligned_frames = aligned_frames[:,2:-2,2:-2]
     return aligned_frames
 
+
 def _register_images(ref_image, moving_image, mode = 'translation', sobelFilter = True, upsample_factor=100):
-    """ Internal registration function wrapping phase_cross_correlation from skimage.registration for linear translation.
+    """ Internal registration function wrapping phase_cross_correlation 
+        from skimage.registration for linear translation.
         Further alignment algorithms to be implemented.
 
         Parameters
@@ -101,15 +96,13 @@ def _register_images(ref_image, moving_image, mode = 'translation', sobelFilter 
     return aligned_image, shifts
 
 
-
-
 try:
     from xicam.plugins.operationplugin import OperationPlugin
     class RegisterOperation(OperationPlugin):
         output_names = ('aligned_frames', 'shifts' )
-        
+
         _func = register_frames_stack
 
 except ModuleNotFoundError:
-    print('xi-cam not installed, cannot import OperationPlugin')
+    print('xi-cam not installed, could not import OperationPlugin for RegisterOperation')
 
