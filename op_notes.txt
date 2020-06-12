@@ -1,0 +1,20 @@
+Convert to operation from stack.py in pystxm:
+[ ] structure different stack methods in operations/workflows on different stages --> how will they be used, how is data read in (single frames, stacks etc...)
+[?] getIOmask
+[ ] calcOD
+
+
+
+Workflows:
+[ ] map - calc diff map
+[ ] do we need sobel filter as extra operation?
+
+
+
+Questions:
+- better to process data directly or to create a new array/list etc? (e.g. [i] vs append in loop?)
+- do we create copies? or just calc changes to apply to raw frames?
+- do we need to wrap sobel filter?
+
+
+@David: Overlap with utils.image.py
