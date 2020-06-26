@@ -2,9 +2,10 @@ import numpy as np
 
 def get_I0_mask(frames):
     """
-    This generates a mask based on a histogram of the data.  It attempts to find the region outside
-    of the sample to get the I0.
-    :return:
+    This generates a mask based on a histogram of the data.
+    It attempts to find the region outside of the sample to get the I0.
+    :param frames: ndarray
+    :return I0_mask: ndarray
     """
     avg_frame = frames.mean(axis=0)
     hist = np.histogram(avg_frame, bins=5)
@@ -18,7 +19,7 @@ def calc_optical_density(frames, I0=None):
 
     :param frames: ndarray
     :param I0: None
-    :return:
+    :return optical_density: ndarray
     """
     if I0 == None:
         mask = get_I0_mask(frames)
