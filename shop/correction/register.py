@@ -104,11 +104,12 @@ def _register_images(ref_image, moving_image, mode = 'translation', sobelFilter 
 try:
     from xicam.plugins.operationplugin import OperationPlugin
     class RegisterOperation(OperationPlugin):
-        output_names = ('aligned_frames', 'shifts' )
-         
+        name = 'Register frames stack'
+        output_names = ('aligned_frames')
+        # def __init__(self):
+        #     super(RegisterOperation, self).__init__()
 
         _func = register_frames_stack
-        _func.name = 'Register Frames'
 
 except ModuleNotFoundError:
     print('xi-cam not installed, could not import OperationPlugin for RegisterOperation')
