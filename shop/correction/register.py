@@ -8,7 +8,10 @@ from skimage.filters import sobel, gaussian
 from skimage.registration import phase_cross_correlation as register_translation# scikit-image > 0.17 required, otherwise from skimage.feature import register_translation
 
 
-def register_frames_stack(frames, mode = 'translation', sobelFilter = True, autocrop = True):
+def register_frames_stack(frames: np.ndarray,
+                          mode: str = 'translation', 
+                          sobelFilter: bool = True, 
+                          autocrop: bool = True):
     """
         Function to register a stack of frames using different registration modes. 
         For use in COSMIC/ALS pystxm package and Xi-CAM.spectral plugin.
@@ -30,14 +33,16 @@ def register_frames_stack(frames, mode = 'translation', sobelFilter = True, auto
         ndarray
             2D aligned image
     """
-    aligned_frames = frames.copy()
+    aligned_frames = []
     shift_list = [] 
     for i in range(1, len(frames)):
         if i == 1 :  # for i = 1 i.e. the second frame of the stack of frames, the first frame (index 0) is used as reference
-            aligned_frames[i], shifts = _register_images(aligned_frames[i - 1], frames[i], sobelFilter = sobelFilter, mode=mode)
+            aligned_frames[i].append(_register_images(aligned_frames[i - 1], frames[i], sobelFilter = sobelFilter, mode=mode)[0])
+            shifts = _register_images(aligned_frames[i - 1], frames[i], sobelFilter = sobelFilter, mode=mode)[1]
             # aligned_frames[i], warp_matrix = _register_images(aligned_frames[i - 1], frames[i], sobelFilter = sobelFilter)
         elif i > 1: # for all following frames i>1 the avg of the previously registered frames are used as reference 
-            aligned_frames[i], shifts= _register_images(aligned_frames[0:i - 1].mean(axis = 0), frames[i], sobelFilter = sobelFilter, mode=mode)
+            aligned_frames[i].append(_register_images(aligned_frames[0:i - 1].mean(axis = 0), frames[i], sobelFilter = sobelFilter, mode=mode)[0])
+            shifts = _register_images(aligned_frames[i - 1], frames[i], sobelFilter = sobelFilter, mode=mode)[1]
             # aligned_frames[i], warp_matrix = _register_images(aligned_frames[0:i - 1].mean(axis = 0), frames[i], sobelFilter = sobelFilter)
         # shifts = warp_matrix[0,2],warp_matrix[1,2]
         shift_list.append(shifts)
@@ -79,7 +84,7 @@ def _register_images(ref_image, moving_image, mode = 'translation', sobelFilter 
             2D shift vector to align image
     """
     
-    if mode is 'translation':
+    if mode == 'translation':
         if sobelFilter == True:
             shifts, error, phase_diff = register_translation(sobel(ref_image), sobel(moving_image), upsample_factor=upsample_factor)
         else:
@@ -100,8 +105,10 @@ try:
     from xicam.plugins.operationplugin import OperationPlugin
     class RegisterOperation(OperationPlugin):
         output_names = ('aligned_frames', 'shifts' )
+         
 
         _func = register_frames_stack
+        _func.name = 'Register Frames'
 
 except ModuleNotFoundError:
     print('xi-cam not installed, could not import OperationPlugin for RegisterOperation')

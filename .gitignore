@@ -6,3 +6,5 @@ correction/__pycache__
 shared_operations.egg-info
 shop/correction/__pycache__
 build
+shop/tests/__pycache__
+shop/__pycache__
