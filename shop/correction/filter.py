@@ -42,7 +42,9 @@ def despike(frames):
     return despiked_frames, shape
 
 # equiv to MedianFilter
-def median_filter(size = 3, axis = 2, frames = None):
+def median_filter(size: int= 3,
+                  axis: int = 2,
+                  frames: np.ndarray = None):
     """
     Applies a median filter from scipy.signal in 1 or 2 dimensions
     :param size: int. kernel size
@@ -76,11 +78,13 @@ def nonlocal_means_filter(frames):
         sigma_est = np.mean(estimate_sigma(frames[i], multichannel=False))
         processed_frames.append(denoise_nl_means(frames[i], \
                                 h=0.6 * sigma_est, sigma=sigma_est,
-                                fast_mode=True)
+                                fast_mode=True))
     return processed_frames
 
 # equiv to WienerFilter
-def wiener_filter(size = 3, axis = 2, frames = None):
+def wiener_filter(size: int= 3,
+                  axis: int = 2,
+                  frames: np.ndarray = None):
     """
     Applies a Wiener filter from scipy.signal in 1 or 2 dimensions
     :param size: int. kernel size
@@ -104,20 +108,20 @@ def wiener_filter(size = 3, axis = 2, frames = None):
 
 
 
-
 """ Import OperationPlugin to use functions as operations in Xi-CAM"""
 try:
     from xicam.plugins.operationplugin import OperationPlugin
 
-
     class MedianFilterOperation(OperationPlugin):
-        output_names = ('frames')
+        name = 'Median filter'
+        output_names = ('filtered_frames')
 
         _func = median_filter
 
 
     class WienerFilterOperation(OperationPlugin):
-        output_names = ('frames')
+        name = 'Wiener filter'
+        output_names = ('filtered_frames')
 
         _func = wiener_filter
 

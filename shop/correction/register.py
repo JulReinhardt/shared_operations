@@ -101,13 +101,14 @@ def _register_images(ref_image, moving_image, mode = 'translation', sobelFilter 
     return aligned_image, shifts
 
 
+
+""" Import OperationPlugin to use functions as operations in Xi-CAM"""
 try:
     from xicam.plugins.operationplugin import OperationPlugin
+
     class RegisterOperation(OperationPlugin):
         name = 'Register frames stack'
         output_names = ('aligned_frames')
-        # def __init__(self):
-        #     super(RegisterOperation, self).__init__()
 
         _func = register_frames_stack
 
