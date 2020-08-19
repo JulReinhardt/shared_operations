@@ -8,3 +8,5 @@ shop/correction/__pycache__
 build
 shop/tests/__pycache__
 shop/__pycache__
+.vscode
+.idea

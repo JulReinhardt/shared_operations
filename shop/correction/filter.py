@@ -3,9 +3,14 @@ from scipy.signal import medfilt, medfilt2d, wiener
 from skimage.restoration import denoise_tv_chambolle, denoise_wavelet, \
                                 denoise_nl_means, estimate_sigma
 
+#TODO pool filter in one operation
+def filters():
+    pass
 
 # equiv to denoise
-def denoise(frames, mode='nl', weight=0.05):
+def denoise(frames: np.ndarray,
+            mode: str='nl',
+            weight: float=0.05):
     """
     Applies some basic denoise algorithm from skimage.restoration.
     :param frames: list of ndarray
@@ -27,7 +32,7 @@ def denoise(frames, mode='nl', weight=0.05):
     return processed_frames
 
 # equiv despike
-def despike(frames):
+def despike(frames: np.ndarray):
     """
     Applies despike algorithm
     :param frames:
@@ -39,35 +44,62 @@ def despike(frames):
     despiked_frames[peakIndices] = filtered_frames[peakIndices]
     despiked_frames = despiked_frames[:, 1:-1, 1:-1]
     shape = filtered_frames.shape
-    return despiked_frames, shape
+    # return despiked_frames, shape
+    return despiked_frames
 
 # equiv to MedianFilter
-def median_filter(size: int= 3,
-                  axis: int = 2,
-                  frames: np.ndarray = None):
+def median_filter(frames: np.ndarray,
+                  size: int = 3,
+                  axis: int = 2):
     """
     Applies a median filter from scipy.signal in 1 or 2 dimensions
-    :param size: int. kernel size
+    :param size: int. size of Median filter in each dimension
     :param axis: int. 0 for X, 1 for Y, 2 for X and Y
     :return:
     """
-    filtered_frames = frames.copy()
+    filtered_frames = []
     if size % 2 == 0: size += 1
     sh = frames.shape
     for i in range(len(frames)):
         if axis == 0:
             c = frames[i].transpose().flatten()
-            frames[i] = np.reshape(medfilt(c, kernel_size = size), (sh[2],sh[1])).transpose()
+            filtered_frames.append(np.reshape(medfilt(c, kernel_size = size), (sh[2], sh[1])).transpose())
         elif axis == 1:
             c = frames[i].flatten()
-            frames[i] = np.reshape(medfilt(c, kernel_size = size), sh[1:3])
+            filtered_frames.append(np.reshape(medfilt(c, kernel_size = size), sh[1:3]))
         else:
-            frames[i] = medfilt2d(frames[i], kernel_size = size)
-    frames[frames == 0.] = frames.mean()
+            filtered_frames.append(medfilt2d(frames[i], kernel_size = size))
+    filtered_frames[filtered_frames == 0.] = filtered_frames.mean()
+    return filtered_frames
+
+# equiv to WienerFilter
+def wiener_filter(frames: np.ndarray,
+                  size: int= 3,
+                  axis: int = 2,
+                  noise: float = None):
+    """
+    Applies a Wiener filter from scipy.signal in 1 or 2 dimensions
+    :param size: int. size of Wiener filter in each dimension
+    :param axis: int. 0 for X, 1 for Y, 2 for X and Y
+    :param noise: float if None then noise is estimated as the average of the local variance of the input.
+    :return:
+    """
+    filtered_frames = []
+    if size % 2 == 0: size += 1
+    sh = frames.shape
+    for i in range(len(frames)):
+        if axis == 0:
+            c = frames[i].transpose().flatten()
+            filtered_frames.append(np.reshape(wiener(c, mysize = size, noise=noise), (sh[2], sh[1])).transpose())
+        elif axis == 1:
+            c = frames[i].flatten()
+            filtered_frames.append(np.reshape(wiener(c, mysize = size, noise=noise), sh[1:3]))
+        else:
+            filtered_frames.append(wiener(frames[i], mysize = size, noise=noise))
     return filtered_frames
 
 # equiv to nlMeansFilter()
-def nonlocal_means_filter(frames):
+def nonlocal_means_filter(frames: np.ndarray):
     """
     Applies a non-local means filter in 2 dimensions
     :param frames: 3D numpy array (nEnergiesxMxN)
@@ -76,35 +108,11 @@ def nonlocal_means_filter(frames):
     processed_frames = []
     for i in range(len(frames)):
         sigma_est = np.mean(estimate_sigma(frames[i], multichannel=False))
-        processed_frames.append(denoise_nl_means(frames[i], \
+        filtered_frames.append(denoise_nl_means(frames[i], \
                                 h=0.6 * sigma_est, sigma=sigma_est,
                                 fast_mode=True))
-    return processed_frames
-
-# equiv to WienerFilter
-def wiener_filter(size: int= 3,
-                  axis: int = 2,
-                  frames: np.ndarray = None):
-    """
-    Applies a Wiener filter from scipy.signal in 1 or 2 dimensions
-    :param size: int. kernel size
-    :param axis: int. 0 for X, 1 for Y, 2 for X and Y
-    :return:
-    """
-    filtered_frames = frames.copy()
-    if size is None: size = 3
-    if axis is None: axis = 0
-    sh = frames.shape
-    for i in range(len(frames)):
-        if axis == 0:
-            c = frames[i].transpose().flatten()
-            frames[i] = np.reshape(wiener(c, mysize = size), (sh[2],sh[1])).transpose()
-        elif axis == 1:
-            c = frames[i].flatten()
-            frames[i] = np.reshape(wiener(c, mysize = size), sh[1:3])
-        else:
-            frames[i] = wiener(frames[i], mysize = size)
     return filtered_frames
+
 
 
 
@@ -124,6 +132,25 @@ try:
         output_names = ('filtered_frames')
 
         _func = wiener_filter
+
+    class nlMeansFilter(OperationPlugin):
+        name = 'Non-local means filter'
+        output_names = ('filtered_frames')
+
+        _func = nonlocal_means_filter
+
+    class Despike(OperationPlugin):
+        name = 'Despike'
+        output_names = ('despiked_frames')
+
+        _func = despike
+
+    class Denoise(OperationPlugin):
+        name = 'Denoise'
+        output_names = ('processed_frames')
+
+        _func = denoise
+
 
 except ModuleNotFoundError:
     print('xi-cam not installed, could not import OperationPlugin for FilterOperations')
