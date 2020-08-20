@@ -18,17 +18,18 @@ def denoise(frames: np.ndarray,
     :param weight: float.  make a good guess.
     :return processed_frames: list of ndarray
     """
-    processed_frames = []
-    for i in range(len(frames)):
-        if mode == 'tv':
-            processed_frames.append(denoise_tv_chambolle(frames[i], weight=weight, multichannel=False))
-        elif mode == 'wavelet':
-            processed_frames.append(denoise_wavelet(frames[i], multichannel=False))
-        elif mode == 'nl':
-            processed_frames.append(denoise_nl_means(frames[i], h=weight))
-        else:
-            print("no applicable denoise mode selected")
-            pass
+    processed_frames = frames.copy
+
+    if mode == 'tv':
+        processed_frames = denoise_tv_chambolle(frames, weight=weight, multichannel=False)
+    elif mode == 'wavelet':
+        processed_frames = denoise_wavelet(frames, multichannel=False)
+    elif mode == 'nl':
+        for i in range(len(processed_frames)):
+            processed_frames[i] = denoise_nl_means(frames[i], h=weight)
+    else:
+        print("no applicable denoise mode selected")
+        pass
     return processed_frames
 
 # equiv despike
@@ -38,6 +39,7 @@ def despike(frames: np.ndarray):
     :param frames:
     :return:
     """
+    #create a copy to get array with same shape
     despiked_frames = frames.copy()
     filtered_frames = median_filter(frames)
     peakIndices = np.where(np.abs(filtered_frames - frames) > 1. * np.abs(filtered_frames - frames).std())
@@ -57,18 +59,18 @@ def median_filter(frames: np.ndarray,
     :param axis: int. 0 for X, 1 for Y, 2 for X and Y
     :return:
     """
-    filtered_frames = []
+    filtered_frames = frames.copy()
     if size % 2 == 0: size += 1
     sh = frames.shape
     for i in range(len(frames)):
         if axis == 0:
             c = frames[i].transpose().flatten()
-            filtered_frames.append(np.reshape(medfilt(c, kernel_size = size), (sh[2], sh[1])).transpose())
+            filtered_frames = np.reshape(medfilt(c, kernel_size = size), (sh[2], sh[1])).transpose()
         elif axis == 1:
             c = frames[i].flatten()
-            filtered_frames.append(np.reshape(medfilt(c, kernel_size = size), sh[1:3]))
+            filtered_frames = np.reshape(medfilt(c, kernel_size = size), sh[1:3])
         else:
-            filtered_frames.append(medfilt2d(frames[i], kernel_size = size))
+            filtered_frames = medfilt2d(frames[i], kernel_size = size)
     filtered_frames[filtered_frames == 0.] = filtered_frames.mean()
     return filtered_frames
 
@@ -82,20 +84,19 @@ def wiener_filter(frames: np.ndarray,
     :param size: int. size of Wiener filter in each dimension
     :param axis: int. 0 for X, 1 for Y, 2 for X and Y
     :param noise: float if None then noise is estimated as the average of the local variance of the input.
-    :return:
+    :return: filtered_frames: np.ndarray
     """
-    filtered_frames = []
-    if size % 2 == 0: size += 1
+    filtered_frames = frames.copy()
     sh = frames.shape
     for i in range(len(frames)):
         if axis == 0:
             c = frames[i].transpose().flatten()
-            filtered_frames.append(np.reshape(wiener(c, mysize = size, noise=noise), (sh[2], sh[1])).transpose())
+            filtered_frames = np.reshape(wiener(c, mysize = size, noise=noise), (sh[2], sh[1])).transpose()
         elif axis == 1:
             c = frames[i].flatten()
-            filtered_frames.append(np.reshape(wiener(c, mysize = size, noise=noise), sh[1:3]))
+            filtered_frames = np.reshape(wiener(c, mysize = size, noise=noise), sh[1:3])
         else:
-            filtered_frames.append(wiener(frames[i], mysize = size, noise=noise))
+            filtered_frames = wiener(frames[i], mysize = size, noise=noise)
     return filtered_frames
 
 # equiv to nlMeansFilter()
@@ -105,7 +106,7 @@ def nonlocal_means_filter(frames: np.ndarray):
     :param frames: 3D numpy array (nEnergiesxMxN)
     :return:
     """
-    processed_frames = []
+    filtered_frames = []
     for i in range(len(frames)):
         sigma_est = np.mean(estimate_sigma(frames[i], multichannel=False))
         filtered_frames.append(denoise_nl_means(frames[i], \
