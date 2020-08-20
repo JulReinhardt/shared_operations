@@ -18,7 +18,7 @@ def denoise(frames: np.ndarray,
     :param weight: float.  make a good guess.
     :return processed_frames: list of ndarray
     """
-    processed_frames = frames.copy
+    processed_frames = frames.copy()
 
     if mode == 'tv':
         processed_frames = denoise_tv_chambolle(frames, weight=weight, multichannel=False)
@@ -65,12 +65,12 @@ def median_filter(frames: np.ndarray,
     for i in range(len(frames)):
         if axis == 0:
             c = frames[i].transpose().flatten()
-            filtered_frames = np.reshape(medfilt(c, kernel_size = size), (sh[2], sh[1])).transpose()
+            filtered_frames[i] = np.reshape(medfilt(c, kernel_size = size), (sh[2], sh[1])).transpose()
         elif axis == 1:
             c = frames[i].flatten()
-            filtered_frames = np.reshape(medfilt(c, kernel_size = size), sh[1:3])
+            filtered_frames[i] = np.reshape(medfilt(c, kernel_size = size), sh[1:3])
         else:
-            filtered_frames = medfilt2d(frames[i], kernel_size = size)
+            filtered_frames[i] = medfilt2d(frames[i], kernel_size = size)
     filtered_frames[filtered_frames == 0.] = filtered_frames.mean()
     return filtered_frames
 
@@ -109,9 +109,7 @@ def nonlocal_means_filter(frames: np.ndarray):
     filtered_frames = []
     for i in range(len(frames)):
         sigma_est = np.mean(estimate_sigma(frames[i], multichannel=False))
-        filtered_frames.append(denoise_nl_means(frames[i], \
-                                h=0.6 * sigma_est, sigma=sigma_est,
-                                fast_mode=True))
+        filtered_frames.append(denoise_nl_means(frames[i], h=0.6 * sigma_est, sigma=sigma_est, fast_mode=True))
     return filtered_frames
 
 

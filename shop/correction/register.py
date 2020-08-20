@@ -33,15 +33,15 @@ def register_frames_stack(frames: np.ndarray,
         ndarray
             2D aligned image
     """
-    aligned_frames = []
+    aligned_frames = frames.copy()
     shift_list = [] 
     for i in range(1, len(frames)):
         if i == 1 :  # for i = 1 i.e. the second frame of the stack of frames, the first frame (index 0) is used as reference
-            aligned_frames[i].append(_register_images(aligned_frames[i - 1], frames[i], sobelFilter = sobelFilter, mode=mode)[0])
+            aligned_frames[i] = _register_images(aligned_frames[i - 1], frames[i], sobelFilter = sobelFilter, mode=mode)[0]
             shifts = _register_images(aligned_frames[i - 1], frames[i], sobelFilter = sobelFilter, mode=mode)[1]
             # aligned_frames[i], warp_matrix = _register_images(aligned_frames[i - 1], frames[i], sobelFilter = sobelFilter)
         elif i > 1: # for all following frames i>1 the avg of the previously registered frames are used as reference 
-            aligned_frames[i].append(_register_images(aligned_frames[0:i - 1].mean(axis = 0), frames[i], sobelFilter = sobelFilter, mode=mode)[0])
+            aligned_frames[i] = _register_images(aligned_frames[0:i - 1].mean(axis = 0), frames[i], sobelFilter = sobelFilter, mode=mode)[0]
             shifts = _register_images(aligned_frames[i - 1], frames[i], sobelFilter = sobelFilter, mode=mode)[1]
             # aligned_frames[i], warp_matrix = _register_images(aligned_frames[0:i - 1].mean(axis = 0), frames[i], sobelFilter = sobelFilter)
         # shifts = warp_matrix[0,2],warp_matrix[1,2]
@@ -52,7 +52,6 @@ def register_frames_stack(frames: np.ndarray,
     if maxX == 0: maxX += 1
     if maxY == 0: maxY += 1
     if autocrop: aligned_frames = aligned_frames[:,minY:-maxY, minX:-maxX]
-    # shifts = shift_list
     #TODO: David, you really want an additional cropping on top?
     # if autocrop: aligned_frames = aligned_frames[:,2:-2,2:-2]
     return aligned_frames
